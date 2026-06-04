@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from resume_parser import parse_resume
-from gap_analyzer import analyze_gaps
+from gap_analyzer import analyze_gaps, get_ai_feedback
 from report_generator import generate_report
 
 app = FastAPI()
@@ -19,4 +19,5 @@ def analyze_resume(input: ResumeInput):
     parsed = parse_resume(input.resume_text)
     gaps = analyze_gaps(parsed["skills_found"])
     report = generate_report(parsed, gaps)
-    return {"report": report}
+    feedback = get_ai_feedback(input.resume_text)
+    return {"report": report, "ai_feedback": feedback}

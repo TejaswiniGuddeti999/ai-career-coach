@@ -1,9 +1,11 @@
-# This file compares skills found in resume 
-# against skills companies actually want
+import os
+from dotenv import load_dotenv
+from openai import OpenAI
+
+load_dotenv()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def analyze_gaps(skills_found: list) -> dict:
-    
-    # These are skills most AI/ML jobs require
     required_skills = {
         "python": "Core programming language",
         "sql": "Data querying",
@@ -13,7 +15,6 @@ def analyze_gaps(skills_found: list) -> dict:
         "postgresql": "Database management"
     }
     
-    # Find which required skills are missing from resume
     missing = {
         skill: desc 
         for skill, desc in required_skills.items() 
@@ -24,3 +25,13 @@ def analyze_gaps(skills_found: list) -> dict:
         "missing_skills": missing,
         "gaps_count": len(missing)
     }
+
+def get_ai_feedback(resume_text: str) -> str:
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a career coach. Analyze this resume and give 3 specific improvements."},
+            {"role": "user", "content": resume_text}
+        ]
+    )
+    return response.choices[0].message.content
