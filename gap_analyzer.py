@@ -26,12 +26,12 @@ def analyze_gaps(skills_found: list) -> dict:
         "gaps_count": len(missing)
     }
 
-def get_ai_feedback(resume_text: str) -> str:
+def get_ai_feedback(resume_text: str,job_description) -> str:
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": "You are a career coach. Analyze this resume and give 3 specific improvements."},
-            {"role": "user", "content": resume_text}
+            {"role": "system", "content": "You are a career coach. Compare the resume against the job description and give 3 specific gaps and how to close them."},
+            {"role": "user", "content": f"RESUME :\n{resume_text}\n\nJOB DESCRIPTION:\n{job_description}"}
         ]
     )
     return response.choices[0].message.content
