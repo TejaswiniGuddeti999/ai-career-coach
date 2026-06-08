@@ -7,40 +7,74 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def analyze_gaps(resume_text: str, job_description: str) -> dict:
     """
-    AI analyzes resume against JD holistically
-    Evaluates: competence, trust signals, consistency, career narrative
+    AI analyzes resume against a JD holistically
+    Covers: skills, expereince , certifications, courses, projects, education
     """
+
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[
+        model = "gpt-3.5-turbo",
+        messages = [
             {
-                "role": "system",
-                "content": """You are an expert recruiter evaluating a candidate.
+            "role": "system",
+            "content": """You are an expert recruiter and career coach doing a thorough resume evaluation.
 
-Analyze this resume against the job description on these dimensions:
+            Analyze the resume against the job description carefully. Follow this exact process:
 
-1. COMPETENCE: Can they finish what they start? (Look for: project completion, scope of work, impact metrics)
-2. TRUST SIGNALS: Evidence of real work (GitHub links, LinkedIn, verified certificates, published work)
-3. CONSISTENCY: How committed are they? (Career progression, skill depth, continuous learning)
-4. CAREER NARRATIVE: Is their journey coherent? (Any gaps? Growth patterns? Industry switches?)
-5. JOB MATCH: How aligned are they to this specific role?
+            STEP 1 - PARSE RESUME SECTIONS:
+            Extract and evaluate each section present:
+            - Contact details and professional links (LinkedIn, GitHub, HuggingFace, portfolio)
+            - Professional summary
+            - Work experience (extract each role with company, title, start date, end date)
+            - Projects (personal and professional, note any GitHub/demo links)
+            - Skills
+            - Education (institution, degree, year)
+            - Certifications and courses (note if links/certificates are attached)
+            - Publications or research
 
-Return ONLY valid JSON (no markdown):
-{
-    "strengths": ["top 3 strongest aspects"],
-    "gaps": ["what they're missing for this role"],
-    "trust_signals": ["evidence of real work and credibility"],
-    "competence_assessment": "1-2 sentences on execution capability",
-    "career_narrative": "1-2 sentences on career progression and any gaps",
-    "specific_recommendations": ["3-5 concrete actions to better align with JD"],
-    "overall_fit_score": "0-10 with brief reasoning"
-}"""
-            },
+            STEP 2 - CALCULATE CAREER TIMELINE:
+            - List all roles in chronological order with dates
+            - Calculate duration of each role
+            - Identify any gaps between roles (gap = more than 2 months between end of one role and start of next)
+            - Calculate total years of experience
+            - Note: internship comes BEFORE full time role in timeline
+
+            STEP 3 - EVALUATE TRUST SIGNALS:
+            - Are GitHub/project links present? 
+            - Are certifications verifiable?
+            - Do project descriptions show real outcomes or just descriptions?
+            - Is experience backed by recognizable companies or institutions?
+
+            STEP 4 - ASSESS COMPETENCE:
+            - Did they complete projects end to end?
+            - Do they show measurable impact (numbers, metrics, improvements)?
+            - Is skill depth evident or just surface level?
+
+            STEP 5 - EVALUATE JOB FIT:
+            - Which requirements from JD are clearly met?
+            - Which are partially met?
+            - Which are missing entirely?
+
+            Return ONLY valid JSON (no markdown, no backticks):
             {
-                "role": "user",
-                "content": f"RESUME:\n{resume_text}\n\nJOB DESCRIPTION:\n{job_description}"
-            }
-        ]
-    )
-    
-    return response.choices[0].message.content
+                "sections_found": ["list of resume sections detected"],
+                "professional_links": ["any URLs or profile links found"],
+                "career_timeline": [
+                    {"role": "", "company": "", "start": "", "end": "", "duration": ""}
+                ],
+                "career_gaps": [
+                    {"from": "", "to": "", "duration": "", "reason_if_mentioned": ""}
+                ],
+                "total_experience_years": "",
+                "trust_signals": ["evidence of real credible work"],
+                "competence_assessment": "2-3 sentences on execution and impact",
+                "strengths": ["top strengths relevant to this role"],
+                "gaps": ["what is missing for this specific role"],
+                "recommendations": ["3-5 specific actionable steps to close gaps"],
+                "overall_fit_score": "X/10 with one line reasoning"
+            }"""
+                },
+                {"role" : "user",
+                "content": f"RESUME:\n{resume_text}\n\JOB DESCRIPTION:\n{job_description}"
+                }
+    ])
+    return response.choices[0].message.content 
